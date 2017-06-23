@@ -1,0 +1,17 @@
+game-geometry-0.1.0.0: benchmarks
+Running 1 benchmarks...
+Benchmark GameGeometry-bench: RUNNING...
+benchmarking Double Unpacked Line Intersection/Intersection
+time                 6.752 ns   (6.713 ns .. 6.804 ns)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 6.916 ns   (6.857 ns .. 6.965 ns)
+std dev              183.3 ps   (161.9 ps .. 208.4 ps)
+variance introduced by outliers: 45% (moderately inflated)
+
+benchmarking Double Unpacked Line Intersection/No Intersection
+time                 6.683 ns   (6.672 ns .. 6.694 ns)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 6.686 ns   (6.673 ns .. 6.707 ns)
+std dev              53.40 ps   (35.58 ps .. 73.74 ps)
+
+Benchmark GameGeometry-bench: FINISH
