@@ -5,9 +5,11 @@
 {-# LANGUAGE Strict                #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE ViewPatterns          #-}
 
 module Alpaca.Geo.V2 (
       V2 (..)
+    , HV2 (..)
     , (⋅)
     , (×)
     , norm
@@ -27,6 +29,13 @@ import           Alpaca.Geo.HMath
 data V2 = V2 Double Double
     deriving (Eq)
 
+class HV2 a where
+    toV2 :: a -> V2
+
+instance HV2 V2 where
+    {-# INLINE toV2 #-}
+    toV2 = id
+
 instance Num V2 where
     (V2 x1 y1) + (V2 x2 y2) = V2 (x1 + x2) (y1  + y2)
     (V2 x1 y1) - (V2 x2 y2) = V2 (x1 - x2) (y1  - y2)
@@ -40,13 +49,13 @@ vmap :: (Double -> Double) -> V2 -> V2
 vmap f (V2 x y) = V2 (f x) (f y)
 
 -- |Dot product.
-(⋅) :: V2 -> V2 -> Double
-(V2 x1 y1) ⋅ (V2 x2 y2) = (x1 * x2) + (y1 * y2)
+(⋅) :: (HV2 a, HV2 b) => a -> b -> Double
+(toV2 -> V2 x1 y1) ⋅ (toV2 -> V2 x2 y2) = (x1 * x2) + (y1 * y2)
 
 -- |Cross product. This assumes a Z component of 0 for the inputs and returns
 -- the z component of the cross product (the x and y components are always 0).
-(×) :: V2 -> V2 -> Double
-(V2 x1 y1) × (V2 x2 y2) = (x1 * y2) - (y1 * x2)
+(×) :: (HV2 a, HV2 b) => a -> b -> Double
+(toV2 -> V2 x1 y1) × (toV2 -> V2 x2 y2) = (x1 * y2) - (y1 * x2)
 
 -- |Division by a scalar.
 instance V2 :/ Double where

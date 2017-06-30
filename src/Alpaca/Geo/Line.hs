@@ -5,34 +5,50 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE Strict                #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
 module Alpaca.Geo.Line (
-      Line
-    , line
-    , suc
-    -- , p
-    -- , dir
+      Line (..)
+    , LineIntersectLine (..)
 ) where
 
+import           Alpaca.Geo.Classes
+import           Alpaca.Geo.Dir
 import           Alpaca.Geo.P2
 import           Alpaca.Geo.V2
 
-{-@ suc :: x:Nat -> {s:Nat | s > x}  @-}
-suc :: Int -> Int
-suc x = x - 9
-
-
-
 -- |A line.
--- p ∈ R²
--- dir ∈ R² | norm dir == 1
--- ⟦Line p dir⟧ = { p + (t * dir) | t ∈ R }
-data Line = Line P2 V2
+data Line = Line P2 Dir
 
--- |Crete a line from a point and direction vector.
-line :: P2 -> V2 -> Maybe Line
-line p dir = Line p <$> normalize dir
+instance Prim Line where
+    p ∈ Line lp ld = (lp .- p) × dirToV2 ld == 0
+
+data LineIntersectLine
+    = LILNothing
+    | LILPoint P2
+    | LILLine Line
+
+instance Line :∩ Line where
+    type Line ∩ Line = LineIntersectLine
+    l1@(Line p1 d1) ∩ l2 = case intersectionTime l1 l2 of
+        LILTNothing  -> LILNothing
+        LILTPoint t1 -> LILPoint (p1 .+ (t1 .* toV2 d1))
+        LILTLine     -> LILLine l1
+
+data LineIntersectLineTime
+    = LILTNothing
+    | LILTPoint Double
+    | LILTLine
+
+intersectionTime :: Line -> Line -> LineIntersectLineTime
+intersectionTime (Line p1 d1) (Line p2 d2)
+    | d2xd1 /= 0  = LILTPoint (p21xd2 / d2xd1)
+    | p21xd2 == 0 = LILTLine
+    | otherwise   = LILTNothing
+    where
+        d2xd1 = d2 × d1
+        p21xd2 = (p1 .- p2) × d2
 
 {-
 instance (Fractional p, Eq p) => Eq Line where

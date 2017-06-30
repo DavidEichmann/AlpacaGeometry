@@ -6,7 +6,6 @@
 module Alpaca.Geo.Transform where
 
 import           Alpaca.Geo.Classes
-import           Alpaca.Geo.HMath
 import           Alpaca.Geo.P2
 import           Alpaca.Geo.V2
 

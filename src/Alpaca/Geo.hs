@@ -2,8 +2,6 @@ module Alpaca.Geo (
       p2ToV2
     , v2ToP2
     , v2ToRad
-    , dirToUnitV2
-    , dirToRad
     , radToUnitV2
     , module Export
 ) where
@@ -28,14 +26,6 @@ v2ToRad :: V2 -> Maybe Rad
 v2ToRad v@(V2 x y)
     | v == 0    = Nothing
     | otherwise = Just (Rad (atan2 y x))
-
--- Dir convertions
-
-dirToUnitV2 :: Dir -> V2
-dirToUnitV2 d = V2 (dirCos d) (dirSin d)
-
-dirToRad :: Dir -> Rad
-dirToRad = Rad . acos . dirCos
 
 -- Rad convertions
 
