@@ -1,262 +1,78 @@
-{-# LANGUAGE DeriveAnyClass        #-}
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE FlexibleContexts     #-}
+{-# OPTIONS_GHC -funbox-strict-fields #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PatternSynonyms       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE BangPatterns          #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE Strict                #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
-module Geometry.Geometry (
+module Alpaca.Geo.Line (
+      Line
+    , line
+    , suc
+    -- , p
+    -- , dir
+) where
 
-          Line (..)
-        , Ray (..)
-        , Seg (..)
-        , Circle (..)
-        , AABB (..)
-        , Polygon (..)
+import           Alpaca.Geo.P2
+import           Alpaca.Geo.V2
 
-        , line
-        , line'
-
-        , ray
-        , ray'
-
-        , seg
-        , seg'
-
-        , aabb
-        , aabb'
-        , aabbFromPoints
-
-        , polygon
-
-        , centerAABB
-        , scaleAABB
-        , unionAABB
-        , diagonalAABB
-
-        , LineIntersect (..)
-        , lineIntersection
-
-        , LineRayIntersect (..)
-        , lineRayIntersection
-
-        , LineSegIntersect (..)
-        , lineSegIntersection
-
-        , SegIntersect (..)
-        , segIntersection
-
-        , SegRayIntersect (..)
-        , segRayIntersection
-
-        , pointSegIntersection
-        , pointLineIntersectionT
-
-        , pointInside
-
-        , HasAABB (..)
-        , HasAABBMay (..)
-        , HasSeg (..)
-        , Lineable (..)
-
-        , Distance (..)
-        , Intersects (..)
-        , RayCast (..)
-        , RayCastMany (..)
-
-        , projectPointOnLine
-        , projectPointOnSeg
+{-@ suc :: x:Nat -> {s:Nat | s > x}  @-}
+suc :: Int -> Int
+suc x = x - 9
 
 
 
-        -- , V2U (..)
-        -- , LineU (..)
-        -- , lineIntersectionU
+-- |A line.
+-- p ∈ R²
+-- dir ∈ R² | norm dir == 1
+-- ⟦Line p dir⟧ = { p + (t * dir) | t ∈ R }
+data Line = Line P2 V2
 
-        , rayCastRaw
+-- |Crete a line from a point and direction vector.
+line :: P2 -> V2 -> Maybe Line
+line p dir = Line p <$> normalize dir
 
-    ) where
-
-import           Data.List
-import           Data.Foldable   (foldl', toList)
-import           Data.Maybe      (fromMaybe, fromJust)
-import           Linear          hiding (rotate, vector)
-import           Utils
-
-import           Control.DeepSeq
-import           GHC.Generics    (Generic)
-import           Test.QuickCheck hiding (label)
-
-data Line    p = Line'    !(Pos p) !(Vec p) deriving (Show, Read, Generic, NFData)
-data Ray     p = Ray'     !(Pos p) !(Vec p) deriving (Show, Read, Generic, NFData)
-data Seg     p = Seg'     !(Pos p) !(Pos p) deriving (Show, Read, Generic, NFData)
-data Circle  p = Circle'  !(Pos p) !p       deriving (Show, Read, Generic, NFData)
-data AABB    p = AABB'    !(Pos p) !(Pos p) deriving (Show, Read, Generic, NFData)
-data Polygon p = Polygon' ![Pos p]          deriving (Show, Read, Generic, NFData)
-
-{-# SPECIALIZE line :: Pos Double -> Vec Double -> Maybe (Line Double) #-}
-line :: (Eq p, Num p) => Pos p -> Vec p -> Maybe (Line p)
-line !p !d
-    | d == 0 = Nothing
-    | otherwise = Just $ Line' p d
-
-{-# SPECIALIZE line' :: Pos Double -> Vec Double -> Line Double #-}
-line' :: (Eq p, Num p) => Pos p -> Vec p -> Line p
-line' !p = fromMaybe (error "Cannot instantiate Line with a direction vector of zero.") . line p
-
-{-# SPECIALIZE ray :: Pos Double -> Vec Double -> Maybe (Ray Double) #-}
-ray :: (Eq p, Num p) => Pos p -> Vec p -> Maybe (Ray p)
-ray !p !d
-    | d == zero = Nothing
-    | otherwise = Just $ Ray' p d
-
-{-# INLINE at_t #-}
-{-# SPECIALIZE at_t :: Ray Double -> Double -> Pos Double #-}
-at_t :: Num p => Ray p -> p -> Pos p
-at_t (Ray' p dir) t = p + (dir ^* t)
-
-{-# SPECIALIZE ray' :: Pos Double -> Vec Double -> Ray Double #-}
-ray' :: (Eq p, Num p) => Pos p -> Vec p -> Ray p
-ray' !p = fromMaybe (error "Cannot instantiate Ray with a direction vector of zero.") . ray p
-
-{-# SPECIALIZE seg :: Pos Double -> Pos Double -> Maybe (Seg Double) #-}
-seg :: (Eq p) => Pos p -> Pos p -> Maybe (Seg p)
-seg !a !b
-    | a == b    = Nothing
-    | otherwise = Just $ Seg' a b
-
-{-# SPECIALIZE seg' :: Pos Double -> Pos Double -> Seg Double #-}
-seg' :: (Eq p, Num p) => Pos p -> Pos p -> Seg p
-seg' !p = fromMaybe (error "Cannot instantiate Seg with two equal points.") . seg p
-
-{-# SPECIALIZE aabb :: Pos Double -> Pos Double -> Maybe (AABB Double) #-}
-aabb :: (Ord p) => Pos p -> Pos p -> Maybe (AABB p)
-aabb a@(V2 x1 y1) b@(V2 x2 y2)
-    | x1 <= x2 && y1 <= y2    = Just (AABB' a b)
-    | otherwise = Nothing
-
-{-# SPECIALIZE aabb' :: Pos Double -> Pos Double -> AABB Double #-}
-aabb' :: (Ord p, Num p) => Pos p -> Pos p -> AABB p
-aabb' !p = fromMaybe (error "Cannot instantiate AABB with first point greater than second point.") . aabb p
-
-aabbFromPoints :: (Foldable f, Ord p) => f (Pos p) -> Maybe (AABB p)
-aabbFromPoints = aabbFromPoints' . toList
-    where
-        aabbFromPoints' []      = Nothing
-        aabbFromPoints' (p:ps)  = Just (foldl'
-                                        (\(AABB' (V2 loX loY) (V2 hiX hiY)) (V2 x y) -> AABB'
-                                            (V2 (min x loX) (min y loY))
-                                            (V2 (max x hiX) (max y hiY)))
-                                        (AABB' p p)
-                                        ps)
-
-polygon :: Eq p => [Pos p] -> Polygon p
-polygon = Polygon' . map head . group
-
-instance (Fractional p, Eq p) => Eq (Line p) where
+{-
+instance (Fractional p, Eq p) => Eq Line where
     l1 == l2 = case lineIntersectionT l1 l2 of
-                LTLine  -> True
-                _       -> False
-
-instance (Fractional p, Ord p, Eq p) => Eq (Ray p) where
-    (Ray' p1 d1) == (Ray' p2 d2) = p1 == p2 && d1 `crossZ` d2 == 0 && d1 `dot` d2 > 0
-
-instance Eq p => Eq (Seg p) where
-    (Seg' a1 a2) == (Seg' b1 b2) = (a1 == b1 && a2 == b2) || (a1 == b2 && a2 == b1)
-
-instance Eq p => Eq (Polygon p) where
-    -- Polygons are equal when the list of points or rotated or even reversed
-    (Polygon' a) == (Polygon' b) = elem a $ rotations b ++ (rotations . reverse) b
-
-
-instance Arbitrary p => Arbitrary (V2 p) where
-    arbitrary = V2 <$> arbitrary <*> arbitrary
-
-instance forall p. (Ord p, Arbitrary p) => Arbitrary (AABB p) where
-    arbitrary = do
-        p1 <- arbitrary :: Gen (V2 p)
-        p2 <- arbitrary
-        return $ fromJust (getAABBMay [p1, p2])
-
-instance (Ord p, Num p, Arbitrary p) => Arbitrary (Line p) where
-    arbitrary = do
-        p <- arbitrary
-        NonZero d <- arbitrary
-        return (Line' p d)
-
-instance (Ord p, Num p, Arbitrary p) => Arbitrary (Ray p) where
-    arbitrary = do
-        p <- arbitrary
-        NonZero d <- arbitrary
-        return (Ray' p d)
-
-instance (Ord p, Arbitrary p) => Arbitrary (Seg p) where
-    arbitrary = do
-        p1 <- arbitrary
-        p2 <- arbitrary `suchThat` (/= p1)
-        return (Seg' p1 p2)
-
-instance (Eq p, Arbitrary p) => Arbitrary (Polygon p) where
-    arbitrary = do
-        l  <- arbitrary
-        ps <- vector l
-        return (polygon ps)
-
-class HasSeg a c where
-    getSeg :: a -> Seg c
-    setSeg :: Seg c -> a -> a
-
-instance HasSeg (Seg a) a where
-    getSeg = id
-    setSeg = const
-
-instance HasSeg (l, Seg a) a where
-    getSeg = snd
-    setSeg newSeg (label, _) = (label, newSeg)
-
-class Lineable a c where
-    toLine :: a -> Line c
-
-instance Num c =>  Lineable (Seg c) c where
-    toLine (Seg' a b) = Line' a (b - a)
+                LTLine -> True
+                _      -> False
 
 data LineIntersectT p
     = LTLine
-    | LTPoint {-# UNPACK #-} !p {-# UNPACK #-} !p
+    | LTPoint {-# UNPACK #-} p {-# UNPACK #-} p
     | LTNothing
-    deriving (Show, Read, Eq, Generic, NFData)
+    deriving (Show, Read, Eq)
 
 data LineIntersect p
-    = LLine !(Line p)
-    | LPoint !(Pos p)
+    = LLine Line
+    | LPoint (Pos p)
     | LNothing
     deriving (Show, Read, Eq, Generic, NFData)
 
 data LineRayIntersect p
-    = LRRay !(Ray p)
-    | LRPoint !(Pos p)
+    = LRRay (Ray p)
+    | LRPoint (Pos p)
     | LRNothing
     deriving (Show, Read, Eq, Generic, NFData)
 
 data LineSegIntersect p
-    = LSSeg !(Seg p)
-    | LSPoint !(Pos p)
+    = LSSeg (Seg p)
+    | LSPoint (Pos p)
     | LSNothing
     deriving (Show, Read, Eq, Generic, NFData)
 
 data SegIntersect p
-    = SSeg !(Seg p)
-    | SPoint !(Pos p)
+    = SSeg (Seg p)
+    | SPoint (Pos p)
     | SNothing
     deriving (Show, Read, Eq, Generic, NFData)
 
 data SegRayIntersect p
-    = SRSeg !(Seg p)
-    | SRPoint !(Pos p)
+    = SRSeg (Seg p)
+    | SRPoint (Pos p)
     | SRNothing
     deriving (Show, Read, Eq, Generic, NFData)
 
@@ -286,19 +102,19 @@ lineIntersectionT   :: (Fractional a, Eq a)
                     => Line a           -- ^ First line
                     -> Line a           -- ^ Second line
                     -> LineIntersectT a -- ^ Line intersection stuff
-lineIntersectionT !(Line' p1 d1) !(Line' p2 d2)
+lineIntersectionT (Line' p1 d1) (Line' p2 d2)
     = if d2Xd1 == 0
         then if p21Xd2 == 0
             then LTLine
             else LTNothing
         else let
-            !t1 = p21Xd2 / d2Xd1
-            !t2 = (p21 `crossZ` d1) / d2Xd1
+            t1 = p21Xd2 / d2Xd1
+            t2 = (p21 `crossZ` d1) / d2Xd1
             in LTPoint t1 t2
     where
-        !p21 = p1 - p2
-        !d2Xd1 = d2 `crossZ` d1
-        !p21Xd2 = p21 `crossZ` d2
+        p21 = p1 - p2
+        d2Xd1 = d2 `crossZ` d1
+        p21Xd2 = p21 `crossZ` d2
 
 {-# INLINEABLE lineIntersection #-}
 -- {-# SPECIALIZE lineIntersection :: Line Double -> Line Double -> LineIntersect Double #-}
@@ -308,18 +124,18 @@ lineIntersection    :: (Fractional a, Eq a)
                     => Line a
                     -> Line a
                     -> LineIntersect a
-lineIntersection !l1@(Line' p1 d1) !l2 =
+lineIntersection l1@(Line' p1 d1) l2 =
     case lineIntersectionT l1 l2 of
-        LTLine         -> LLine l1
-        LTPoint t1 _   -> LPoint (p1 + (d1 ^* t1))
-        LTNothing      -> LNothing
+        LTLine       -> LLine l1
+        LTPoint t1 _ -> LPoint (p1 + (d1 ^* t1))
+        LTNothing    -> LNothing
 
 {-# SPECIALIZE lineRayIntersection :: Line Double -> Ray Double -> LineRayIntersect Double #-}
 lineRayIntersection :: (Fractional a, Ord a)
                     => Line a
                     -> Ray a
                     -> LineRayIntersect a
-lineRayIntersection !line !ray@(Ray' rayP rayD) =
+lineRayIntersection line ray@(Ray' rayP rayD) =
     case lineIntersectionT line (Line' rayP rayD) of
         LTLine         -> LRRay ray
         LTPoint _ rayT -> if 0 <= rayT
@@ -332,7 +148,7 @@ lineSegIntersection :: (Fractional a, Ord a)
                     => Line a
                     -> Seg a
                     -> LineSegIntersect a
-lineSegIntersection !line !seg@(Seg' p1 p2) =
+lineSegIntersection line seg@(Seg' p1 p2) =
     case lineIntersectionT line (Line' p1 p12) of
         LTLine         -> LSSeg seg
         LTPoint _ segT -> if 0 <= segT && segT <= 1
@@ -349,7 +165,7 @@ segIntersection :: forall a. (Fractional a, Ord a)
                 => Seg a
                 -> Seg a
                 -> SegIntersect a
-segIntersection !segA@(Seg' a1 a2) !segB@(Seg' b1 b2)
+segIntersection segA@(Seg' a1 a2) segB@(Seg' b1 b2)
     | a1 == a2  = maybe SNothing SPoint $ pointSegIntersection a1 segB
     | b1 == b2  = maybe SNothing SPoint $ pointSegIntersection b1 segA
     | otherwise = case lineIntersectionT (Line' a1 a12) (Line' b1 b12) of
@@ -377,7 +193,7 @@ segRayIntersection :: (Fractional a, Ord a)
                    => Seg a
                    -> Ray a
                    -> SegRayIntersect a
-segRayIntersection !seg !(Ray' rayP rayD) =
+segRayIntersection seg (Ray' rayP rayD) =
     case lineSegIntersection (Line' rayP rayD) seg of
         LSSeg (Seg' a b) ->
             if (a - rayP) `dot` rayD < 0
@@ -404,7 +220,7 @@ segRayIntersection !seg !(Ray' rayP rayD) =
         LSNothing -> SRNothing
 
 pointSegIntersection :: (Ord p, Num p) => Pos p -> Seg p -> Maybe (Pos p)
-pointSegIntersection !p !(Seg' a b)
+pointSegIntersection p (Seg' a b)
     | p == a ||
       p == b ||
       (pa `crossZ` pb == 0 && pa `dot` pb < 0)
@@ -415,7 +231,7 @@ pointSegIntersection !p !(Seg' a b)
         pb = b - p
 
 pointLineIntersectionT :: (Eq p, Fractional p) => Pos p -> Line p -> Maybe p
-pointLineIntersectionT !p !(Line' x d)
+pointLineIntersectionT p (Line' x d)
     | p == x ||
       xp `crossZ` d == 0
                 = Just $ xp `dot` d / quadrance d
@@ -424,7 +240,7 @@ pointLineIntersectionT !p !(Line' x d)
         xp = p - x
 
 pointInside :: forall p. (Fractional p, Ord p) => Pos p -> Polygon p -> Bool
-pointInside !(V2 x y) !(Polygon' shape) = foldl' (/=) False . map intersectsEdge . zip shape $ rotate 1 shape
+pointInside (V2 x y) (Polygon' shape) = foldl' (/=) False . map intersectsEdge . zip shape $ rotate 1 shape
     where
         intersectsEdge :: (Pos p, Pos p) -> Bool
         intersectsEdge (V2 ax ay, V2 bx by)
@@ -436,15 +252,15 @@ pointInside !(V2 x y) !(Polygon' shape) = foldl' (/=) False . map intersectsEdge
 --
 
 projectPointOnLineT :: Fractional p => Pos p -> Line p -> p
-projectPointOnLineT !p !(Line' q d) = ((p - q) `dot` d) / (d `dot` d)
+projectPointOnLineT p (Line' q d) = ((p - q) `dot` d) / (d `dot` d)
 
 projectPointOnLine :: Fractional p => Pos p -> Line p -> Pos p
-projectPointOnLine !p !l@(Line' q d) = (t *^ d) + q
+projectPointOnLine p l@(Line' q d) = (t *^ d) + q
     where
         t = projectPointOnLineT p l
 
 projectPointOnSeg :: (Fractional p, Ord p) => Pos p -> Seg p -> Pos p
-projectPointOnSeg !p !s@(Seg' a b)
+projectPointOnSeg p s@(Seg' a b)
     | t < 0 = a
     | t > 1 = b
     | otherwise = ((1 - t) *^ a) + (t *^ b)
@@ -520,7 +336,7 @@ projectPointOnSeg !p !s@(Seg' a b)
 
 -- type family BaseType a where
 --     BaseType (V2 p) = p
---     BaseType (Line p) = p
+--     BaseType Line = p
 --     BaseType (Ray p) = p
 --     BaseType (Seg p) = p
 --     BaseType (AABB p) = p
@@ -533,7 +349,7 @@ projectPointOnSeg !p !s@(Seg' a b)
 
 -- type family p where
 --     Base (V2 p)       = p
---     Base (Line p)     = p
+--     Base Line     = p
 --     Base (Ray p)      = p
 --     Base (Seg p)      = p
 --     Base (AABB p)     = p
@@ -603,11 +419,11 @@ class Fractional p => RayCast p a | a -> p where
 
 {-# INLINE quadrance' #-}
 quadrance' :: Double -> Double -> Double
-quadrance' !x !y = (x * x) + (y * y)
+quadrance' x y = (x * x) + (y * y)
 
 {-# INLINE dot' #-}
 dot' :: Double -> Double -> Double -> Double -> Double
-dot' !x1 !y1 !x2 !y2 = (x1 * x2) + (y1 * y2)
+dot' x1 y1 x2 y2 = (x1 * x2) + (y1 * y2)
 
 {-# INLINE at_t' #-}
 at_t' :: Double -> Double -> Double -> Double -> Double -> (Double, Double)
@@ -615,31 +431,31 @@ at_t' posX posY dirX dirY t = (posX + (dirX * t), posY + (dirY * t))
 
 rayCastRaw :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> Maybe (Double, Double)
 rayCastRaw pX pY dirX dirY centerX centerY radius = let
-    !p_to_cX = centerX - pX
-    !p_to_cY = centerY - pY
+    p_to_cX = centerX - pX
+    p_to_cY = centerY - pY
 
     -- a, b, and c of the quadratic formula.
-    !a = quadrance' dirX dirY
-    !b = -2.0 * (dot' p_to_cX p_to_cY dirX dirY)
-    !c = quadrance' p_to_cX p_to_cY - (radius * radius)
+    a = quadrance' dirX dirY
+    b = -2.0 * (dot' p_to_cX p_to_cY dirX dirY)
+    c = quadrance' p_to_cX p_to_cY - (radius * radius)
 
-    !u = b * b - 4.0 * a * c
+    u = b * b - 4.0 * a * c
     in if u < 0.0
         then Nothing
         else if u == 0.0
-            then let !t = -b / (2.0 * a) in
+            then let t = -b / (2.0 * a) in
                 if t >= 0.0
                     then Just (at_t' pX pY dirX dirY t)
                     else Nothing
         else let
-                !v = sqrt u
-                !denom = 2.0 * a
+                v = sqrt u
+                denom = 2.0 * a
 
                 -- Note that a is always positive so lo and high are clear.
-                !lo_t = ((-b) - v) / denom
+                lo_t = ((-b) - v) / denom
             in if lo_t >= 0.0
                 then Just (at_t' pX pY dirX dirY lo_t)
-                else let !hi_t = ((-b) + v) / denom in if hi_t >= 0.0
+                else let hi_t = ((-b) + v) / denom in if hi_t >= 0.0
                     then
                         -- Ray starts inside the circle.
                         -- This is a filled circle hence use ray start.
@@ -649,30 +465,30 @@ rayCastRaw pX pY dirX dirY centerX centerY radius = let
 {-# SPECIALIZE rayCast :: Ray Double -> Circle Double -> Maybe (Pos Double)  #-}
 instance (Floating p, Ord p) => RayCast p (Circle p) where
     rayCast ray@(Ray' p dir) (Circle' center radius) = let
-        !p_to_c = center - p
+        p_to_c = center - p
 
         -- a, b, and c of the quadratic formula.
-        !a = quadrance dir
-        !b = -2.0 * (p_to_c `dot` dir)
-        !c = quadrance p_to_c - (radius * radius)
+        a = quadrance dir
+        b = -2.0 * (p_to_c `dot` dir)
+        c = quadrance p_to_c - (radius * radius)
 
-        !u = b * b - 4.0 * a * c
+        u = b * b - 4.0 * a * c
         in if u < 0.0
             then Nothing
             else if u == 0.0
-                then let !t = -b / (2.0 * a) in
+                then let t = -b / (2.0 * a) in
                     if t >= 0.0
                         then Just (ray `at_t` t)
                         else Nothing
             else let
-                    !v = sqrt u
-                    !denom = 2.0 * a
+                    v = sqrt u
+                    denom = 2.0 * a
 
                     -- Note that a is always positive so lo and high are clear.
-                    !lo_t = ((-b) - v) / denom
+                    lo_t = ((-b) - v) / denom
                 in if lo_t >= 0.0
                     then Just (ray `at_t` lo_t)
-                    else let !hi_t = ((-b) + v) / denom in if hi_t >= 0.0
+                    else let hi_t = ((-b) + v) / denom in if hi_t >= 0.0
                         then
                             -- Ray starts inside the circle.
                             -- This is a filled circle hence use ray start.
@@ -739,9 +555,9 @@ instance (Num p, Ord p) => Intersects (AABB p) (RayInv p) where
 
 data RayInv p
     = RayInv
-        !(Pos p)
+        (Pos p)
         -- ^ The ray start.
-        !(Vec p)
+        (Vec p)
         -- ^ The ray inverse direction vector (V2 (1/directionX) (1/directionY))
 
 toRayInv :: Fractional p => Ray p -> RayInv p
@@ -749,3 +565,4 @@ toRayInv (Ray' start (V2 dirX dirY)) = RayInv start (V2 (1 / dirX) (1 / dirY))
 
 fromRayInv :: Fractional p => RayInv p -> Ray p
 fromRayInv (RayInv start (V2 dirInvX dirInvY)) = Ray' start (V2 (1 / dirInvX) (1 / dirInvY))
+-}
