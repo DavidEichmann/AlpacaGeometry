@@ -6,6 +6,10 @@
 
 module Alpaca.Geo.HMath where
 
+-- | Hetterogenious equality.
+class HEq a b where
+    (.==) :: a -> b -> Bool
+
 -- | Hetterogenious addition.
 class a :+ b where
     type a .+ b;

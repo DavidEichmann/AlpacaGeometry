@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -funbox-strict-fields #-}
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PatternSynonyms       #-}
@@ -14,15 +15,14 @@ module Alpaca.Geo.Line (
 ) where
 
 import           Alpaca.Geo.Classes
-import           Alpaca.Geo.Dir
 import           Alpaca.Geo.P2
 import           Alpaca.Geo.V2
 
 -- |A line.
-data Line = Line P2 Dir
+data Line = Line P2 (V2 'VNonZero)
 
 instance Prim Line where
-    p ∈ Line lp ld = (lp .- p) × dirToV2 ld == 0
+    p ∈ Line lp ld = (lp .- p) × ld == 0
 
 data LineIntersectLine
     = LILNothing
@@ -33,7 +33,7 @@ instance Line :∩ Line where
     type Line ∩ Line = LineIntersectLine
     l1@(Line p1 d1) ∩ l2 = case intersectionTime l1 l2 of
         LILTNothing  -> LILNothing
-        LILTPoint t1 -> LILPoint (p1 .+ (t1 .* toV2 d1))
+        LILTPoint t1 -> LILPoint (p1 .+ (t1 .* d1))
         LILTLine     -> LILLine l1
 
 data LineIntersectLineTime

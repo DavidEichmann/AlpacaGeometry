@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Strict                #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -9,7 +10,7 @@ import           Alpaca.Geo.Classes
 import           Alpaca.Geo.P2
 import           Alpaca.Geo.V2
 
-newtype Trans = Trans V2
+newtype Trans = Trans (V2 'VAny)
 
 instance Trans :* Trans where
     type Trans .* Trans = Trans;
@@ -20,8 +21,8 @@ instance Transform Trans
 instance Trans :* P2 where
     type Trans .* P2 = P2;
     (Trans t) .* p = p .+ t
-instance Trans :* V2 where
-    type Trans .* V2 = V2;
+instance Trans :* V2 a where
+    type Trans .* V2 a = V2 a;
     _ .* v = v
 
 
@@ -40,8 +41,8 @@ instance Rot :* P2 where
     type Rot .* P2 = P2;
     (Rot c s) .* (P2 x y) = P2 ((c * x) - (s * y)) ((s * x) + (c * y))
 
-instance Rot :* V2 where
-    type Rot .* V2 = V2;
+instance Rot :* V2 a where
+    type Rot .* V2 a = V2 a;
     (Rot c s) .* (V2 x y) = V2 ((c * x) - (s * y)) ((s * x) + (c * y))
 
 instance Trans :* Rot where
@@ -60,6 +61,6 @@ instance Isometry :* Isometry where
 instance Isometry :* P2 where
     type Isometry .* P2 = P2;
     (Isometry t r) .* p = t .* (r .* p)
-instance Isometry :* V2 where
-    type Isometry .* V2 = V2;
+instance Isometry :* V2 a where
+    type Isometry .* V2 a = V2 a;
     _ .* v = v

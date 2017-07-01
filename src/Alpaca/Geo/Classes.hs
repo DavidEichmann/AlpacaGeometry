@@ -1,5 +1,7 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE Strict                #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
@@ -18,7 +20,7 @@ import           Alpaca.Geo.HMath as Export
 import           Alpaca.Geo.P2
 import           Alpaca.Geo.V2
 
-class (a :* P2, a :* V2) => Transform a
+class (a :* P2, a :* V2 'VAny) => Transform a
 
 -- |All primitive geometries represent a set of points
 class Prim a where
