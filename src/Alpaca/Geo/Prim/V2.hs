@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
@@ -10,7 +9,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Alpaca.Geo.V2 (
+module Alpaca.Geo.Prim.V2 (
       V2 (..)
     , VP (..)
     , NonZero
@@ -31,7 +30,6 @@ module Alpaca.Geo.V2 (
 ) where
 
 import           Alpaca.Geo.HMath
-import           Alpaca.Geo.P2
 import           Alpaca.Geo.Rad
 import           Unsafe.Coerce
 
@@ -154,11 +152,3 @@ radToV2 (Rad r) = unsafeCoerce $ V2 (cos r) (sin r)
 -- |Downgrade the properties
 downgrade :: (a ~> b) => V2 a -> V2 b
 downgrade = unsafeCoerce
-
-instance P2 :+ V2 a where
-    type P2 .+ V2 a = P2
-    (P2 px py) .+ (V2 vx vy) = P2 (px + vx) (py + vy)
-
-instance P2 :- P2 where
-    type P2 .- P2 = V2 'VAny
-    (P2 x1 y1) .- (P2 x2 y2) = V2 (x1 - x2) (y1 - y2)

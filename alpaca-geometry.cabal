@@ -16,14 +16,16 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:
-                       Alpaca.Geo.Transform
-                       Alpaca.Geo.Classes
+                       Alpaca.Geo
                        Alpaca.Geo.HMath
                        Alpaca.Geo.Rad
-                       Alpaca.Geo.P2
-                       Alpaca.Geo.V2
-                       Alpaca.Geo.Line
-                       Alpaca.Geo
+                       Alpaca.Geo.Transform
+                       Alpaca.Geo.Prim
+  other-modules:
+                       Alpaca.Geo.Prim.Classes
+                       Alpaca.Geo.Prim.P2
+                       Alpaca.Geo.Prim.V2
+                       Alpaca.Geo.Prim.Line
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
   ghc-options:         -Wall

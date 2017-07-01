@@ -3,12 +3,14 @@
 {-# LANGUAGE Strict                #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE FlexibleContexts         #-}
 
 module Alpaca.Geo.Transform where
 
-import           Alpaca.Geo.Classes
-import           Alpaca.Geo.P2
-import           Alpaca.Geo.V2
+import           Alpaca.Geo.HMath
+import           Alpaca.Geo.Prim
+
+class (a :* P2, a :* V2 'VAny) => Transform a
 
 newtype Trans = Trans (V2 'VAny)
 

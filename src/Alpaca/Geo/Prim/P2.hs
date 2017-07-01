@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Alpaca.Geo.P2 (
+module Alpaca.Geo.Prim.P2 (
       P2 (..)
 ) where
 
@@ -13,6 +13,7 @@ module Alpaca.Geo.P2 (
 -- |A point in 2D.
 -- ⟦P2 x y⟧ = (x, y) ∈ R²
 data P2 = P2 Double Double
+
 
 instance Num P2 where
     (P2 x1 y1) + (P2 x2 y2) = P2 (x1 + x2) (y1  + y2)

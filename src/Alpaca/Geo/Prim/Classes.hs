@@ -2,25 +2,20 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE Strict                #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Alpaca.Geo.Classes (
-      module Export
-    , Transform
-    , Prim (..)
+module Alpaca.Geo.Prim.Classes (
+      Prim (..)
     , (:⊆) (..)
     , (:∩?) (..)
     , (:∩) (..)
     , (:∪) (..)
+    , Distance (..)
+    , ClosestPoints (..)
 ) where
 
-import           Alpaca.Geo.HMath as Export
-import           Alpaca.Geo.P2
-import           Alpaca.Geo.V2
-
-class (a :* P2, a :* V2 'VAny) => Transform a
+import           Alpaca.Geo.Prim.P2
 
 -- |All primitive geometries represent a set of points
 class Prim a where
@@ -43,3 +38,17 @@ class a :∩ b where
 class a :∪ b where
     type a ∪ b
     (∪) :: a -> b -> a ∪ b
+
+class Distance a b where
+    -- |Minmum distance between a and b.
+    -- Min (u ∈ a, v ∈ b). |u-v|
+    distance :: a -> b -> Double
+
+    -- |Minmum distance between a and b.
+    -- Min (u ∈ a, v ∈ b). |u-v|²
+    distanceSq :: a -> b -> Double
+
+class ClosestPoints a b where
+    -- |closestPoints on a and b
+    -- ArgMin (u ∈ a, v ∈ b). |u-v|
+    closestPoints :: a -> b -> (P2, P2)
