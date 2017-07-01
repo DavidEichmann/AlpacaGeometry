@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -funbox-strict-fields #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
@@ -17,6 +18,8 @@ module Alpaca.Geo.Prim.V2 (
     , Unit
     , UnitB
     , downgrade
+    , p2ToV2
+    , v2ToP2
     , (⋅)
     , (×)
     , norm
@@ -29,6 +32,7 @@ module Alpaca.Geo.Prim.V2 (
     , radToV2
 ) where
 
+import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.HMath
 import           Alpaca.Geo.Rad
 import           Unsafe.Coerce
@@ -44,6 +48,19 @@ data V2 (p :: VP) where
     V2 :: Double -> Double -> V2 'VAny
 
 deriving instance Eq (V2 a)
+
+
+instance P2 :+ V2 a where
+    type P2 .+ V2 a = P2
+    (P2 px py) .+ (V2 vx vy) = P2 (px + vx) (py + vy)
+
+instance P2 :- V2 a where
+    type P2 .- V2 a = P2
+    (P2 px py) .- (V2 vx vy) = P2 (px - vx) (py - vy)
+
+instance P2 :- P2 where
+    type P2 .- P2 = V2 'VAny
+    (P2 x1 y1) .- (P2 x2 y2) = V2 (x1 - x2) (y1 - y2)
 
 -- |Properties of a V2
 data VP
@@ -91,6 +108,16 @@ instance Num (V2 'VAny) where
 
 vmap :: (Double -> Double) -> V2 'VAny -> V2 'VAny
 vmap f (V2 x y) = V2 (f x) (f y)
+
+-- P2 convertions
+
+p2ToV2 :: P2 -> V2 'VAny
+p2ToV2 (P2 x y) = V2 x y
+
+-- V2 convertions
+
+v2ToP2 :: V2 a -> P2
+v2ToP2 (V2 x y) = P2 x y
 
 -- |Dot product.
 (⋅) :: V2 a -> V2 b -> Double
