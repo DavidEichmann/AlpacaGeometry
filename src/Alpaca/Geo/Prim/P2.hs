@@ -13,6 +13,7 @@ module Alpaca.Geo.Prim.P2 (
 -- |A point in 2D.
 -- ⟦P2 x y⟧ = (x, y) ∈ R²
 data P2 = P2 Double Double
+    deriving (Eq)
 
 
 instance Num P2 where

@@ -17,4 +17,4 @@ import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.Prim.V2
 
 -- |A line.
-data Line = Line P2 (V2 'VNonZero)
+data Line = Line { lineP :: P2, lineDir :: V2 'VNonZero }
