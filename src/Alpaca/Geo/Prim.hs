@@ -8,12 +8,17 @@
 
 module Alpaca.Geo.Prim (
       LineIntersectLine (..)
+    , aaboxFromCenterWidthHeight
+    , aaboxAspect
     , p2ToV2
     , v2ToP2
     , module Export
 ) where
 
+import           Data.List               (foldl1')
+
 import           Alpaca.Geo.HMath
+import           Alpaca.Geo.Prim.AABox   as Export
 import           Alpaca.Geo.Prim.Classes as Export
 import           Alpaca.Geo.Prim.Line    as Export
 import           Alpaca.Geo.Prim.P2      as Export
@@ -23,9 +28,25 @@ instance P2 :+ V2 a where
     type P2 .+ V2 a = P2
     (P2 px py) .+ (V2 vx vy) = P2 (px + vx) (py + vy)
 
+instance P2 :+ P2 where
+    type P2 .+ P2 = P2
+    (P2 x1 y1) .+ (P2 x2 y2) = P2 (x1 + x2) (y1 + y2)
+
+instance P2 :- V2 a where
+    type P2 .- V2 a = P2
+    (P2 px py) .- (V2 vx vy) = P2 (px - vx) (py - vy)
+
 instance P2 :- P2 where
     type P2 .- P2 = V2 'VAny
     (P2 x1 y1) .- (P2 x2 y2) = V2 (x1 - x2) (y1 - y2)
+
+instance P2 :* Double where
+    type P2 .* Double = P2
+    (P2 x1 y1) .* s = P2 (x1 * s) (y1 * s)
+
+instance Double :* P2 where
+    type Double .* P2 = P2
+    (.*) = flip (.*)
 
 -- Prim
 
@@ -39,6 +60,12 @@ instance Prim Line where
 
 instance Eq Line where
     (Line p1 d1) == (Line p2 d2) = (d1 × d2 == 0) && ((p1 .- p2) × d1 == 0)
+
+-- (Maybe)AABounded
+
+instance AABounded a => MaybeAABounded [a] where
+    maybeAabb [] = Nothing
+    maybeAabb as = Just (foldl1' aaboxUnion (fmap aabb as))
 
 -- ClosestPoints
 
@@ -69,6 +96,22 @@ instance Distance P2 Line where
     distanceSq = flip distanceSq
 instance Distance Line P2 where
     distanceSq = distanceSqViaClosestPoints
+
+-- Area
+
+instance Area P2 where
+    area _ = 0
+instance Area Line where
+    area _ = 0
+instance Area AABox where
+    area box = let V2 w h = aaboxDiagonal box in w * h
+
+-- Center
+
+instance Center P2 where
+    center = id
+instance Center AABox where
+    center box = (aaboxMin box + aaboxMax box) .* (0.5 :: Double)
 
 -- Intersection (test)
 
@@ -110,6 +153,23 @@ closestPointTime (Line p d) x = (d ⋅ (x .- p)) / normSq d
 
 -- TODO SegToLine
 -- TODO rayToLine
+
+
+aaboxFromCenterWidthHeight :: P2 -> Double -> Double -> AABox
+aaboxFromCenterWidthHeight c w h = let
+    halfDiagonal = V2 (w * 0.5) (h * 0.5)
+    in aabb (c .- halfDiagonal, c .+ halfDiagonal)
+
+aaboxAspect :: AABox -> Maybe Double
+aaboxAspect box = case aaboxDiagonal box of
+    (V2 _ 0) -> Nothing
+    (V2 w h) -> Just (w / h)
+
+aaboxGrowToAspect :: Maybe Double -> AABox -> AABox
+aaboxGrowToAspect Nothing box = undefined
+
+aaboxDiagonal :: AABox -> V2 'VAny
+aaboxDiagonal box = aaboxMax box .- aaboxMin box
 
 lineAt :: Line -> Double -> P2
 lineAt (Line p d) t = p .+ (t .* d)

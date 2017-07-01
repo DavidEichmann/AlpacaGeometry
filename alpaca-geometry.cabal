@@ -26,6 +26,7 @@ library
                        Alpaca.Geo.Prim.P2
                        Alpaca.Geo.Prim.V2
                        Alpaca.Geo.Prim.Line
+                       Alpaca.Geo.Prim.AABox
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
   ghc-options:         -Wall

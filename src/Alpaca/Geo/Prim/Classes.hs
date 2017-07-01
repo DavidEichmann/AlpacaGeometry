@@ -9,6 +9,8 @@ module Alpaca.Geo.Prim.Classes (
       Prim (..)
     , ClosestPoints (..)
     , Distance (..)
+    , Area (..)
+    , Center (..)
     , (:⊆) (..)
     , (:∩?) (..)
     , (:∩) (..)
@@ -36,6 +38,12 @@ class Distance a b where
     -- Min (u ∈ a, v ∈ b). |u-v|²
     distanceSq :: a -> b -> Double
     distanceSq a b = let d = distance a b in d * d
+
+class Area a where
+    area :: a -> Double
+
+class Center a where
+    center :: a -> P2
 
 -- |Contains test (a ⊆ b iff b contains a)
 class a :⊆ b where
