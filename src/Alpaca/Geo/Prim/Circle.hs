@@ -23,13 +23,16 @@ import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.Prim.V2
 
 -- |An axis aligned box.
-data Circle = Circle { pCenter :: P2, radius :: Double }
+data Circle = Circle P2 Double
     deriving (Eq)
 
 circle :: P2 -> Double -> Maybe Circle
 circle c r
     | r < 0     = Nothing
     | otherwise = Just (Circle c r)
+
+radius :: Circle -> Double
+radius (Circle _ r) = r
 
 instance Prim Circle where
     p ∈ (Circle c r) = distanceSq p c <= r * r

@@ -17,6 +17,7 @@ module Alpaca.Geo.Prim.Classes (
     , (:∩?) (..)
     , (:∩) (..)
     , (:∪) (..)
+    , ConvexPolygonShape (..)
 ) where
 
 import           Alpaca.Geo.HMath
@@ -92,3 +93,8 @@ class a :∩ b where
 class a :∪ b where
     type a ∪ b
     (∪) :: a -> b -> a ∪ b
+
+-- |Convex Polygon Shapes
+class ConvexPolygonShape a where
+    corners :: a -> [P2]
+    -- TODO edges and halfspaces

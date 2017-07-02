@@ -15,7 +15,7 @@ import           Alpaca.Geo.HMath
 -- |A point in 2D.
 -- ⟦P2 x y⟧ = (x, y) ∈ R²
 data P2 = P2 Double Double
-    deriving (Eq)
+    deriving (Eq, Ord)
 
 instance P2 :+ P2 where
     type P2 .+ P2 = P2

@@ -21,7 +21,6 @@ module Alpaca.Geo.Prim.AABox (
     , aspect
     , growToAspect
     , diagonal
-    , corners
     , union
 ) where
 
@@ -40,6 +39,14 @@ instance Prim AABox where
     (P2 x y) ∈ (AABox (P2 loX loY) (P2 hiX hiY))
         = loX <= x && x <= hiX &&
           loY <= y && y <= hiY
+
+instance ConvexPolygonShape AABox where
+    corners (AABox lo@(P2 loX loY) hi@(P2 hiX hiY)) = [
+            lo,
+            P2 hiX loY,
+            hi,
+            P2 loX hiY
+        ]
 
 instance Area AABox where
     area box = let V2 w h = diagonal box in w * h
@@ -128,14 +135,6 @@ instance AABounded (P2, P2) where
     aabb (P2 x1 y1, P2 x2 y2) = AABox
         (P2 (min x1 x2) (min y1 y2))
         (P2 (max x1 x2) (max y1 y2))
-
-corners :: AABox -> [P2]
-corners (AABox lo@(P2 loX loY) hi@(P2 hiX hiY)) = [
-        lo,
-        P2 hiX loY,
-        hi,
-        P2 loX hiY
-    ]
 
 -- TODO aaboxEdges :: AABox -> [Seg]
 
