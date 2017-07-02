@@ -20,9 +20,9 @@ module Alpaca.Geo.Prim.Classes (
     , ConvexPolygonShape (..)
 ) where
 
-import           Alpaca.Geo.HMath
 import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.Prim.V2
+import           Alpaca.HMath
 
 -- |All primitive geometries represent a set of points
 class Prim a where

@@ -16,11 +16,11 @@ module Alpaca.Geo.Prim.ConvexPolygon (
 import           Data.List               (sort)
 import           Data.Maybe              (fromJust)
 
-import           Alpaca.Geo.HMath
 import           Alpaca.Geo.Prim.AABox   (AABounded (..), MaybeAABounded (..))
 import           Alpaca.Geo.Prim.Classes
 import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.Prim.V2
+import           Alpaca.HMath
 
 -- |CCW ordered list of convex points
 newtype ConvexPolygon = ConvexPolygon [P2]

@@ -17,7 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:
                        Alpaca.Geo
-                       Alpaca.Geo.HMath
+                       Alpaca.HMath
                        Alpaca.Geo.Rad
                        Alpaca.Geo.Transform
                        Alpaca.Geo.Prim

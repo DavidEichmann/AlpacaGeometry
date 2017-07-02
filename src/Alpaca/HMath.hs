@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Alpaca.Geo.HMath where
+module Alpaca.HMath where
 
 -- | Hetterogenious equality.
 class HEq a b where

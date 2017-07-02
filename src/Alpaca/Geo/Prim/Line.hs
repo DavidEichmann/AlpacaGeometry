@@ -13,7 +13,7 @@ module Alpaca.Geo.Prim.Line (
       Line (..)
 ) where
 
-import           Alpaca.Geo.HMath
+import           Alpaca.HMath
 import           Alpaca.Geo.Prim.Classes
 import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.Prim.V2

@@ -8,7 +8,7 @@ module Alpaca.Geo.Prim.P2 (
       P2 (..)
 ) where
 
-import           Alpaca.Geo.HMath
+import           Alpaca.HMath
 
 {-# INLINE pmap #-}
 

@@ -33,7 +33,7 @@ module Alpaca.Geo.Prim.V2 (
 ) where
 
 import           Alpaca.Geo.Prim.P2
-import           Alpaca.Geo.HMath
+import           Alpaca.HMath
 import           Alpaca.Geo.Rad
 import           Unsafe.Coerce
 

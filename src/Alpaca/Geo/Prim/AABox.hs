@@ -26,10 +26,10 @@ module Alpaca.Geo.Prim.AABox (
 
 import           Data.List               (foldl1')
 
-import           Alpaca.Geo.HMath
 import           Alpaca.Geo.Prim.Classes
 import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.Prim.V2
+import           Alpaca.HMath
 
 -- |An axis aligned box.
 data AABox = AABox { pMin :: P2, pMax :: P2 }

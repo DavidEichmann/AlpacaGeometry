@@ -16,7 +16,7 @@ module Alpaca.Geo.Prim.Circle (
     , radius
 ) where
 
-import           Alpaca.Geo.HMath
+import           Alpaca.HMath
 import           Alpaca.Geo.Prim.AABox
 import           Alpaca.Geo.Prim.Classes
 import           Alpaca.Geo.Prim.P2
