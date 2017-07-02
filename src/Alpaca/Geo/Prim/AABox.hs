@@ -15,8 +15,8 @@ module Alpaca.Geo.Prim.AABox (
     , MaybeAABounded (..)
     , AABox
     , AspectErr (..)
-    , aaboxMin
-    , aaboxMax
+    , pMin
+    , pMax
     , fromCenterWidthHeight
     , aspect
     , growToAspect
@@ -33,14 +33,37 @@ import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.Prim.V2
 
 -- |An axis aligned box.
-data AABox = AABox { aaboxMin :: P2, aaboxMax :: P2 }
+data AABox = AABox { pMin :: P2, pMax :: P2 }
     deriving (Eq)
+
+instance Prim AABox where
+    (P2 x y) ∈ (AABox (P2 loX loY) (P2 hiX hiY))
+        = loX <= x && x <= hiX &&
+          loY <= y && y <= hiY
 
 instance Area AABox where
     area box = let V2 w h = diagonal box in w * h
 
 instance Center AABox where
-    center box = (aaboxMin box + aaboxMax box) .* (0.5 :: Double)
+    center box = (pMin box + pMax box) .* (0.5 :: Double)
+
+instance ClosestPoints P2 AABox where
+    closestPoints = flip closestPoints
+
+instance ClosestPoints AABox P2 where
+    closestPoints (AABox (P2 loX loY) (P2 hiX hiY)) p@(P2 x y)
+        = (P2 (min (max loX x) hiX)
+              (min (max loY y) hiY), p)
+
+instance Distance P2 AABox where distanceSq = distanceSqViaClosestPoints
+instance Distance AABox P2 where distanceSq = distanceSqViaClosestPoints
+
+
+
+
+-- TODO instance contains Seg
+-- TODO instance cast Ray
+
 
 fromCenterWidthHeight :: P2 -> Double -> Double -> AABox
 fromCenterWidthHeight c w h = let
@@ -56,15 +79,16 @@ aspect box = case diagonal box of
     (V2 _ 0) -> Left ZeroHeight
     (V2 w h) -> Right (w / h)
 
-withMarginsUnsafe :: AABox -> Double -> Double -> Double -> Double -> AABox
-withMarginsUnsafe
-    (AABox (P2 loX loY) (P2 hiX hiY))
+withMargins :: AABox -> Double -> Double -> Double -> Double -> AABox
+withMargins
+    box@(AABox (P2 loX loY) (P2 hiX hiY))
     top
     right
     bottom
     left
-    = AABox (P2 (loX - left) (loY - bottom))
-            (P2 (hiX + right) (hiY + top))
+    = let P2 cx cy = center box
+      in AABox (P2 (min cx (loX - left))  (min cy (loY - bottom)))
+               (P2 (max cx (hiX + right)) (max cy (hiY + top)))
 
 growToAspect :: Double -> AABox -> Either AspectErr AABox
 growToAspect newAspect box = do
@@ -74,14 +98,14 @@ growToAspect newAspect box = do
     then
         -- Grow along x
         let halfDx = ((newAspect * boxDiagonalY)- boxDiagonalX) * 0.5
-        in return (withMarginsUnsafe box 0.0 halfDx 0.0 halfDx)
+        in return (withMargins box 0.0 halfDx 0.0 halfDx)
     else
         -- Grow along y
         let half_dy = ((boxDiagonalY / newAspect) - boxDiagonalY) * 0.5
-        in return (withMarginsUnsafe box half_dy 0.0 half_dy 0.0)
+        in return (withMargins box half_dy 0.0 half_dy 0.0)
 
 diagonal :: AABox -> V2 'VAny
-diagonal box = aaboxMax box .- aaboxMin box
+diagonal box = pMax box .- pMin box
 
 
 class AABounded a where
