@@ -7,8 +7,8 @@
 
 module Alpaca.Geo.Transform where
 
-import           Alpaca.HMath
 import           Alpaca.Geo.Prim
+import           Alpaca.HMath
 
 class (a :* P2, a :* V2 'VAny) => Transform a
 
