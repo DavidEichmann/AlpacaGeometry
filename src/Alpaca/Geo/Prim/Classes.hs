@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -69,9 +70,18 @@ instance Center P2 where
 class a :⊆ b where
     (⊆) :: a -> b -> Bool
 
+instance Prim p => P2 :⊆ p where
+    (⊆) = (∈)
+
 -- |Intersection test (a ⊆ b iff b contains a)
 class a :∩? b where
     (∩?) :: a -> b -> Bool
+
+instance Prim p => P2 :∩? p where
+    (∩?) = (∈)
+
+instance Prim p => p :∩? P2 where
+    (∩?) = flip (∈)
 
 -- |Intersection
 class a :∩ b where

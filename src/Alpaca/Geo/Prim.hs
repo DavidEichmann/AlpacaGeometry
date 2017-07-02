@@ -11,6 +11,7 @@ module Alpaca.Geo.Prim (
 ) where
 
 import           Alpaca.Geo.Prim.AABox   as Export
+import           Alpaca.Geo.Prim.Circle  as Export
 import           Alpaca.Geo.Prim.Classes as Export
 import           Alpaca.Geo.Prim.Line    as Export
 import           Alpaca.Geo.Prim.P2      as Export
