@@ -11,12 +11,15 @@
 
 module Alpaca.Geo.Prim.Line (
       Line (..)
+    , LineIntersectLine
+    , LineIntersectLineTime (..)
+    , lineIntersectLineTime
 ) where
 
-import           Alpaca.HMath
 import           Alpaca.Geo.Prim.Classes
 import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.Prim.V2
+import           Alpaca.HMath
 
 -- |A line.
 data Line = Line { lineP :: P2, lineDir :: V2 'VNonZero }
@@ -50,13 +53,13 @@ instance Area Line where
 
 instance Line :∩ Line where
     type Line ∩ Line = LineIntersectLine
-    l1@(Line p1 d1) ∩ l2 = case intersectionTime l1 l2 of
+    l1@(Line p1 d1) ∩ l2 = case lineIntersectLineTime l1 l2 of
         LILTNothing  -> LILNothing
         LILTPoint t1 -> LILPoint (p1 .+ (t1 .* d1))
         LILTLine     -> LILLine l1
 
 instance Line :∩? Line where
-    l1 ∩? l2 = intersectionTime l1 l2 == LILTNothing
+    l1 ∩? l2 = lineIntersectLineTime l1 l2 == LILTNothing
 
 data LineIntersectLine
     = LILNothing
@@ -71,8 +74,8 @@ data LineIntersectLineTime
     deriving (Eq)
 
 -- |The time parameter of the first line that intersects the second line.
-intersectionTime :: Line -> Line -> LineIntersectLineTime
-intersectionTime (Line p1 d1) (Line p2 d2)
+lineIntersectLineTime :: Line -> Line -> LineIntersectLineTime
+lineIntersectLineTime (Line p1 d1) (Line p2 d2)
     | d2xd1 /= 0  = LILTPoint (p21xd2 / d2xd1)
     | p21xd2 == 0 = LILTLine
     | otherwise   = LILTNothing

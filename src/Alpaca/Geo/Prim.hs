@@ -16,4 +16,5 @@ import           Alpaca.Geo.Prim.Classes       as Export
 import           Alpaca.Geo.Prim.ConvexPolygon as Export
 import           Alpaca.Geo.Prim.Line          as Export
 import           Alpaca.Geo.Prim.P2            as Export
+import           Alpaca.Geo.Prim.Ray           as Export
 import           Alpaca.Geo.Prim.V2            as Export
