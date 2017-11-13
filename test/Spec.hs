@@ -56,7 +56,7 @@ tests = testGroup "Tests" [
                         boxCenter = centerAABB box
                         ray = Ray' rayStart (boxCenter - rayStart)
                     in
-                        ray `intersects` box && box `intersects` ray
+                        ray ∩? box && box ∩? ray
                 )
 
         ]
