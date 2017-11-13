@@ -5,12 +5,12 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE DefaultSignatures     #-}
 
 module Alpaca.Geo.Prim.Classes (
       Prim (..)
     , ClosestPoints (..)
     , Distance (..)
-    , distanceSqViaClosestPoints
     , Area (..)
     , Center (..)
     , (:⊆) (..)
@@ -30,47 +30,77 @@ import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.Prim.V2
 import           Alpaca.HMath
 
--- |All primitive geometries represent a set of points
+-- |All primitive geometries denote a non-empty set of points defined by (∈)
+-- i.e. (∈) is the characteristic function of the set of points.
 class Prim a where
+    -- |∈ denotes set containment.
     (∈) :: P2 -> a -> Bool
 
+-- |A P2 is itself a primitive: ⟦P2 x y⟧ = {(x,y)}
+-- Note that there is now a double denotation. P2
+-- is both a point (⟦P2 x y⟧ = (x,y)) and a singleton set
+-- (⟦P2 x y⟧ = {(x,y)}). Which definition is in use is usually clear from the
+-- context and there is little to gain from being explicite about the difference.
+-- Hence:
+--    ⟦P2 x y ∈ P2 u v⟧
+--    = ⟦P2 x y⟧ ⟦∈⟧ ⟦P2 u v⟧
+--    = (x, y) ∈ {(u v)}              -- Note dule denotation here
+--    = (x, y) == (u v)
 instance Prim P2 where (∈) = (==)
 
-class ClosestPoints a b where
+class (Prim a, Prim b) => ClosestPoints a b where
     -- |closestPoints on a and b
-    -- ArgMin (u ∈ a, v ∈ b). |u-v|
+    -- ⟦closestPoints a b⟧ = ArgMin_{(u, v) ∈ a×b} ‖u-v‖
     closestPoints :: a -> b -> (P2, P2)
 
+-- | ⟦closestPoints a b⟧
+--   = ArgMin_{(u, v) ∈ {a}×{b}} ‖u-v‖
+--   = ArgMin_{(u, v) ∈ {(a, b)}} ‖u-v‖
+--   = (a, b)
 instance ClosestPoints P2 P2 where closestPoints a b = (a, b)
 
-class Distance a b where
+class (Prim a, Prim b) => Distance a b where
     -- |Minmum distance between a and b.
-    -- Min (u ∈ a, v ∈ b). |u-v|
+    --   Min_{(u, v) ∈ a×b} ‖u-v‖
     distance :: a -> b -> Double
-    distance a b = let dSq = distanceSq a b in sqrt dSq
+    distance a b = sqrt (distanceSq a b)
 
     -- |Minmum distance between a and b.
-    -- Min (u ∈ a, v ∈ b). |u-v|²
+    --   Min_{(u, v) ∈ a×b}. ‖u-v‖²
+    -- Note the parallel with closest point leads to this default implementation.
     distanceSq :: a -> b -> Double
-    distanceSq a b = let d = distance a b in d * d
+    default distanceSq :: ClosestPoints a b => a -> b -> Double
+    distanceSq a b = let (u, v) = closestPoints a b in normSq (u .- v)
 
 instance Distance P2 P2 where
+    -- | ⟦distance a b⟧
+    --   = Min_{(u, v) ∈ {a}×{b}} ‖u-v‖
+    --   = Min_{(u, v) ∈ {(a, b)}} ‖u-v‖
+    --   = ‖a-b‖
     distance   a b = norm   (a .- b)
+
+    -- | ⟦distance a b⟧
+    --   = Min_{(u, v) ∈ {a}×{b}} ‖u-v‖²
+    --   = Min_{(u, v) ∈ {(a, b)}} ‖u-v‖²
+    --   = ‖a-b‖²
     distanceSq a b = normSq (a .- b)
 
-distanceSqViaClosestPoints :: ClosestPoints a b => a -> b -> Double
-distanceSqViaClosestPoints a b = let (ap, bp) = closestPoints a b in distanceSq ap bp
-
-class Area a where
+class Prim a => Area a where
+    -- |The geometrical area of the primitive.
     area :: a -> Double
 
 instance Area P2 where
     area _ = 0
 
-class Center a where
+class Prim a => Center a where
+    -- |The geometric center. Mean of all the points in the primitive.
+    -- Note that if the area is 0, then this reduces to the perimiter center.
     center :: a -> P2
 
 instance Center P2 where
+    -- | ⟦center a⟧
+    --   = Mean {a}
+    --   = a
     center = id
 
 -- |Contains test (a ⊆ b iff b contains a)
