@@ -62,8 +62,8 @@ instance ClosestPoints AABox P2 where
         = (P2 (min (max loX x) hiX)
               (min (max loY y) hiY), p)
 
-instance Distance P2 AABox where distanceSq = distanceSqViaClosestPoints
-instance Distance AABox P2 where distanceSq = distanceSqViaClosestPoints
+instance Distance P2 AABox
+instance Distance AABox P2
 
 
 

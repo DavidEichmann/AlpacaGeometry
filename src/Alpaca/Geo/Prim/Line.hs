@@ -45,8 +45,7 @@ instance ClosestPoints Line Line where
 instance Distance P2 Line where
     distance   = flip distance
     distanceSq = flip distanceSq
-instance Distance Line P2 where
-    distanceSq = distanceSqViaClosestPoints
+instance Distance Line P2
 
 instance Area Line where
     area _ = 0

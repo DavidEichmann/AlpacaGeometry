@@ -103,6 +103,11 @@ instance Center P2 where
     --   = a
     center = id
 
+
+-- TODO continue documenting and improving type classes.
+-- TODO introduce approximate versions of these type classes
+
+
 -- |Contains test (a ⊆ b iff b contains a)
 class a :⊆ b where
     (⊆) :: a -> b -> Bool
