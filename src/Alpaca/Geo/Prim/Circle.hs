@@ -20,7 +20,6 @@ module Alpaca.Geo.Prim.Circle (
 import           Alpaca.Geo.Prim.AABox
 import           Alpaca.Geo.Prim.Classes
 import           Alpaca.Geo.Prim.P2
-import           Alpaca.Geo.Prim.Ray
 import           Alpaca.Geo.Prim.V2
 import           Alpaca.HMath
 
@@ -72,34 +71,3 @@ instance Circle :⊆ Circle where
 
 -- TODO Cast
 -- TODO transformable
-
-instance Cast Ray Circle where
-    cast ray@(Ray rayP rayD) (Circle circleC circleR) = let
-        p_to_c = circleC .- rayP;
-
-        -- a, b, and c of the quadratic formula.
-        a = normSq rayD;
-        b = -2.0 * (p_to_c ⋅ rayD)
-        c = normSq p_to_c - (circleR * circleR);
-        u = (b * b) - (4.0 * a * c)
-
-        in if
-            | u < 0.0   -> Nothing
-            | u == 0.0  -> let t = -b / (2.0 * a)
-                in if t >= 0.0
-                    then Just (rayAt ray t)
-                    else Nothing
-            | otherwise -> let
-                v = sqrt u
-                denom = 2.0 * a
-
-                -- Note that a is always positive so lo and high are clear.
-                lo_t = ((-b) - v) / denom;
-                in if lo_t >= 0.0
-                    then Just (rayAt ray lo_t)
-                    else let hi_t = ((-b) + v) / denom;
-                        in if hi_t >= 0.0
-                            -- Ray starts inside the circle.
-                            -- This is a filled circle hence use ray start.
-                            then Just rayP
-                            else Nothing

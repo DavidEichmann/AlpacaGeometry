@@ -51,9 +51,6 @@ instance Line :∩ Ray where
                         then RILPoint (rayAt self t)
                         else RILNothing
 
-instance Caster Ray where
-    casterDistanceSq (Ray s _) = distanceSq s
-
 rayAt :: Ray -> Double -> P2
 rayAt (Ray s d) t = s .+ (t .* d)
 
