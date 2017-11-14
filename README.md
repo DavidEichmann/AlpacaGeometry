@@ -1,6 +1,6 @@
 # AlpacaGeometry
 
-This is a simple 2D geometry library providing some geometry primitives and a host of geometry
+This is a simple 2D geometry library providing some geometry primitives and a set of geometry
 related type classes. A central goal of this library is elegance through the use of denotational
 semantics. It is a natural fear to expect code to gain complexity when employing denotational semantics.
 This is because "simple" hacks are no longer tollerated as they do not match the semantics. The
