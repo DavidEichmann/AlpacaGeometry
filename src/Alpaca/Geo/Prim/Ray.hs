@@ -22,7 +22,9 @@ import           Alpaca.Geo.Prim.P2
 import           Alpaca.Geo.Prim.V2
 import           Alpaca.HMath
 
--- |An axis aligned box.
+-- |A ray.
+--   ⟦Ray p d⟧        -- (d /= (0,0))
+-- = { p + td | t ∈ R . t ≥ 0 }
 data Ray = Ray P2 (V2 'VNonZero)
     deriving (Eq)
 

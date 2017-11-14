@@ -68,7 +68,7 @@ data VP
     | VNonZero
     | VUnit
 
--- |Property relations.
+-- |Property implication.
 class (~>) (a :: VP) (b :: VP)
 instance (a ~>? b ~ 'True) => (~>) a b
 type family (~>?) (a :: VP) (b :: VP) where

@@ -13,7 +13,7 @@ import           Alpaca.HMath
 {-# INLINE pmap #-}
 
 -- |A point in 2D.
--- ⟦P2 x y⟧ = (x, y) ∈ R²
+-- ⟦P2 x y⟧ = (x, y)
 data P2 = P2 Double Double
     deriving (Eq, Ord)
 

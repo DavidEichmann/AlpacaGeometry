@@ -14,10 +14,10 @@ module Alpaca.Geo.Prim.AABox (
       AABounded (..)
     , MaybeAABounded (..)
     , AABox
-    , AspectErr (..)
     , pMin
     , pMax
     , fromCenterWidthHeight
+    , AspectErr (..)
     , aspect
     , growToAspect
     , diagonal
@@ -32,6 +32,8 @@ import           Alpaca.Geo.Prim.V2
 import           Alpaca.HMath
 
 -- |An axis aligned box.
+--   ⟦AABox l h⟧      -- (l_x ≤ h_x && l_y ≤ h_y)
+-- = { p | p ∈ R² . l_x ≤ p_x && p_x ≤ h_x && l_y ≤ p_y && p_y ≤ h_y }
 data AABox = AABox { pMin :: P2, pMax :: P2 }
     deriving (Eq)
 
@@ -64,9 +66,6 @@ instance ClosestPoints AABox P2 where
 
 instance Distance P2 AABox
 instance Distance AABox P2
-
-
-
 
 -- TODO instance contains Seg
 -- TODO instance cast Ray

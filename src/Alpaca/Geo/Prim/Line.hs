@@ -22,6 +22,8 @@ import           Alpaca.Geo.Prim.V2
 import           Alpaca.HMath
 
 -- |A line.
+--   ⟦Line p d⟧        -- (d /= (0,0))
+-- = { p + td | t ∈ R }
 data Line = Line { lineP :: P2, lineDir :: V2 'VNonZero }
 
 instance Prim Line where
